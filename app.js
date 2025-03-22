@@ -2,6 +2,7 @@ const express = require('express');
 const { createToken, verifyToken } = require('./services/services'); 
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
+const citaRoutes = require('./routes/citaRoutes');
 require('dotenv').config();
 
 if (!process.env.SECRET_TOKEN) {
@@ -60,5 +61,8 @@ app.get('/datos-seguros', (req, res) => {
 // ✅ Rutas de pacientes y doctores
 app.use('/pacientes', pacienteRoutes);
 app.use('/doctores', doctorRoutes);
+app.use('/citas', citaRoutes); 
+
+
 
 module.exports = app;
