@@ -6,6 +6,8 @@ const citaRoutes = require('./routes/citaRoutes');
 const medicamentoRoutes = require('./routes/medicamentoRoutes');
 const tratamientoRoutes = require('./routes/tratamientoRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
+const enfermeraRoutes = require('./routes/enfermeraRoutes');
+const departamentoRoutes = require('./routes/departamentoRoutes');
 
 require('dotenv').config();
 
@@ -69,5 +71,7 @@ app.use('/citas', citaRoutes);
 app.use('/medicamentos', medicamentoRoutes);
 app.use('/tratamientos', tratamientoRoutes);
 app.use('/auth', usuarioRoutes); // login visual y proceso
+app.use('/enfermeras', enfermeraRoutes);
+app.use('/departamentos', departamentoRoutes);
 
 module.exports = app;
