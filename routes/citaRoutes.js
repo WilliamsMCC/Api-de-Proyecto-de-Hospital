@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const CitaMedica = require('../models/CitaMedica');
+const Paciente = require('../models/Paciente');
+const Doctor = require('../models/Doctor');
 
-// Mostrar las citas médicas como tabla HTML
 router.get('/', async (req, res) => {
     try {
-        const citas = await CitaMedica.findAll();
+        const citas = await CitaMedica.findAll({
+            include: [
+                { model: Paciente },
+                { model: Doctor }
+            ]
+        });
 
         let tablaHTML = `
         <html>
@@ -23,29 +29,29 @@ router.get('/', async (req, res) => {
             <table>
                 <tr>
                     <th>ID Cita</th>
-                    <th>ID Paciente</th>
-                    <th>ID Doctor</th>
+                    <th>Paciente</th>
+                    <th>Doctor</th>
                     <th>Fecha y Hora</th>
                     <th>Motivo de la Cita</th>
                     <th>Notas Médicas</th>
                 </tr>`;
 
         citas.forEach(cita => {
+            const pacienteNombre = cita.Paciente ? `${cita.Paciente.nombre} ${cita.Paciente.apellido}` : 'Desconocido';
+            const doctorNombre = cita.Doctor ? `${cita.Doctor.nombre} ${cita.Doctor.apellido}` : 'Desconocido';
+
             tablaHTML += `
                 <tr>
                     <td>${cita.id_cita}</td>
-                    <td>${cita.id_paciente}</td>
-                    <td>${cita.id_doctor}</td>
+                    <td>${pacienteNombre}</td>
+                    <td>${doctorNombre}</td>
                     <td>${new Date(cita.fecha_hora).toLocaleString()}</td>
                     <td>${cita.motivo_cita || ''}</td>
                     <td>${cita.notas_medicas || ''}</td>
                 </tr>`;
         });
 
-        tablaHTML += `
-            </table>
-        </body>
-        </html>`;
+        tablaHTML += `</table></body></html>`;
 
         res.send(tablaHTML);
     } catch (error) {

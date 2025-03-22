@@ -1,5 +1,9 @@
 const { DataTypes } = require('sequelize');
-const { sequelizeInstance } = require('../config/db'); // Importar correctamente
+const { sequelizeInstance } = require('../config/db');
+
+// Requiere los modelos relacionados
+const Paciente = require('./Paciente');
+const Doctor = require('./Doctor');
 
 const CitaMedica = sequelizeInstance.define('CitaMedica', {
   id_cita: {
@@ -31,5 +35,9 @@ const CitaMedica = sequelizeInstance.define('CitaMedica', {
   tableName: 'citamedica',
   timestamps: false
 });
+
+// ✅ Asociaciones
+CitaMedica.belongsTo(Paciente, { foreignKey: 'id_paciente' });
+CitaMedica.belongsTo(Doctor, { foreignKey: 'id_doctor' });
 
 module.exports = CitaMedica;

@@ -1,28 +1,46 @@
-'use strict'
+'use strict';
 
-const jwt = require('jwt-simple'); // 2.1k (gzipped: 1k)
-const moment = require('moment'); // 61.5k (gzipped: 19.8k)
+const jwt = require('jwt-simple');
+const moment = require('moment');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
 
-function createToken() {
+// 🔐 Crear token JWT para un usuario
+function createToken(user) {
     const payload = {
-        sub: User,
-        iat: moment() .unix(),
+        sub: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol,
+        iat: moment().unix(),
         exp: moment().add(15, 'days').unix()
+    };
+
+    return jwt.encode(payload, process.env.SECRET_TOKEN);
 }
-return jwr.encode(payload, process.env.SECRET_TOKEN)
-}
-function decodeToken(token) {
+
+// 🔍 Verificar token JWT recibido
+function verifyToken(token) {
     try {
         const payload = jwt.decode(token, process.env.SECRET_TOKEN);
 
         if (payload.exp <= moment().unix()) {
-            return { status: 401, message: 'El token ha expirado' };
+            return { error: 'Token expirado' };
         }
 
         return payload;
-    } catch (error) {
-        return { status: 400, message: 'Token inválido' };
+    } catch (err) {
+        return { error: 'Token inválido' };
     }
 }
 
-module.exports = { createToken, decodeToken };
+// 🔒 Validar contraseña
+async function validatePassword(password, hash) {
+    return await bcrypt.compare(password, hash);
+}
+
+module.exports = {
+    createToken,
+    verifyToken,
+    validatePassword
+};
