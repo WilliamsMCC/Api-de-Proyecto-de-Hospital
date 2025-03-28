@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken'); // <--- Agregado
 const Usuario = require('../models/Usuario');
 const { createToken, validatePassword } = require('../services/service');
 
@@ -30,7 +31,6 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password, rol } = req.body;
 
-    // 🔍 Verificar que el rol se haya enviado y sea válido
     const rolesValidos = ['admin', 'doctor', 'enfermera'];
     if (!rol || !rolesValidos.includes(rol)) {
         return res.status(400).send(`<p>❌ Rol inválido o no proporcionado</p><a href="/auth/login">Volver</a>`);
@@ -48,13 +48,33 @@ router.post('/login', async (req, res) => {
             return res.status(401).send(`<p>🔒 Contraseña incorrecta</p><a href="/auth/login">Intentar de nuevo</a>`);
         }
 
-        // 🔐 Verificar si el rol coincide con el del usuario en base de datos
         if (usuario.rol !== rol) {
             return res.status(403).send(`<p>⚠️ El rol ingresado no coincide con el del usuario</p><a href="/auth/login">Volver</a>`);
         }
 
-        // ✅ Todo correcto → Redirigir
-        return res.redirect('/pacientes');
+        // ✅ Crear el token con los datos necesarios
+        const token = jwt.sign(
+            { id: usuario.id, rol: usuario.rol, email: usuario.email },
+            process.env.SECRET_TOKEN,
+            { expiresIn: '1h' }
+        );
+
+        // 🧠 Detectar si el request vino desde fetch/axios (JSON) o formulario HTML
+        const isJsonRequest = req.headers.accept && req.headers.accept.includes('application/json');
+
+        if (isJsonRequest) {
+            // 👉 Si viene desde el frontend React/Vite
+            return res.json({ token, usuario: { id: usuario.id, rol: usuario.rol, email: usuario.email } });
+        } else {
+            // 👉 Si viene desde el formulario HTML
+            res.send(`
+                <p>✅ Login exitoso. Token generado.</p>
+                <p><strong>Token:</strong></p>
+                <code>${token}</code>
+                <br><br>
+                <a href="/auth/login">Volver</a>
+            `);
+        }
 
     } catch (err) {
         console.error('❌ Error en login:', err);

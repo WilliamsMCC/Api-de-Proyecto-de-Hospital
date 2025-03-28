@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser'); // ✅ nuevo
 const { createToken, verifyToken } = require('./services/services'); 
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
@@ -18,26 +19,37 @@ if (!process.env.SECRET_TOKEN) {
 
 const app = express();
 
+// ✅ Middleware necesarios
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser()); // ✅ usar cookie-parser
 
-// ✅ Redirigir la raíz ("/") al formulario de login visual
+// ✅ Redirigir raíz al login
 app.get('/', (req, res) => {
     res.redirect('/auth/login');
 });
 
-// ✅ Ruta para generar un token (extra / API)
-app.post('/login', (req, res) => {
+// ✅ Ruta de login visual que guarda el token en cookie
+app.post('/auth/login', (req, res) => {
     const user = req.body.user || "test_user"; 
-    const token = createToken(user); 
+    const token = createToken(user);
 
-    console.log(`🔑 Token generado para "${user}": ${token}`);
-    res.json({ token });
+    // Guardar token en cookie
+    res.cookie('token', token, {
+        httpOnly: true,
+        maxAge: 3600000 // 1 hora
+    });
+
+    res.send(`
+        <h3>✅ Login exitoso</h3>
+        <p>Token guardado en cookie.</p>
+        <a href="/pacientes">Ir a pacientes</a>
+    `);
 });
 
-// ✅ Ruta para verificar un token
+// ✅ Ruta para verificar un token enviado en body (opcional)
 app.post('/verify', (req, res) => {
-    const { token } = req.body;
+    const token = req.body.token || req.cookies.token;
 
     if (!token) {
         return res.status(400).json({ error: "Token no proporcionado" });
@@ -47,9 +59,9 @@ app.post('/verify', (req, res) => {
     res.json(result);
 });
 
-// ✅ Ruta protegida para probar tokens
+// ✅ Ruta protegida para probar tokens desde cookie
 app.get('/datos-seguros', (req, res) => {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.cookies.token;
 
     if (!token) {
         return res.status(401).json({ error: "Acceso denegado. No hay token." });
@@ -64,14 +76,21 @@ app.get('/datos-seguros', (req, res) => {
     res.json({ mensaje: "Acceso permitido", usuario: decoded.sub });
 });
 
-// ✅ Rutas principales del sistema
-app.use('/pacientes', pacienteRoutes);
+// ✅ Ruta para cerrar sesión (elimina la cookie)
+app.get('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.send(`<h3>🔒 Sesión cerrada.</h3><a href="/auth/login">Volver al login</a>`);
+});
+
+// ✅ Rutas del sistema
+app.use('/pacientes', pacienteRoutes); 
 app.use('/doctores', doctorRoutes);
 app.use('/citas', citaRoutes); 
 app.use('/medicamentos', medicamentoRoutes);
 app.use('/tratamientos', tratamientoRoutes);
-app.use('/auth', usuarioRoutes); // login visual y proceso
+app.use('/auth', usuarioRoutes); 
 app.use('/enfermeras', enfermeraRoutes);
 app.use('/departamentos', departamentoRoutes);
 
 module.exports = app;
+

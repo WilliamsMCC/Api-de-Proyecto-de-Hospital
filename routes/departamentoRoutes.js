@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Departamento = require('../models/Departamento');
+const { verifyToken } = require('../middlewares/authMiddleware'); // ✅ Importar
 
-// ✅ Ruta para obtener departamentos como tabla HTML
-router.get('/', async (req, res) => {
+// ✅ Ruta protegida para mostrar departamentos en tabla HTML
+router.get('/', verifyToken, async (req, res) => {
     try {
         const departamentos = await Departamento.findAll();
 
@@ -39,11 +40,24 @@ router.get('/', async (req, res) => {
         });
 
         tablaHTML += `</table></body></html>`;
-
         res.send(tablaHTML);
     } catch (error) {
         console.error("❌ Error al obtener departamentos:", error);
         res.status(500).send('Error obteniendo departamentos');
+    }
+});
+
+// ✅ Ruta protegida para insertar nuevo departamento
+router.post('/', verifyToken, async (req, res) => {
+    try {
+        const nuevo = await Departamento.create(req.body);
+        res.status(201).json({
+            message: "Departamento creado exitosamente",
+            departamento: nuevo
+        });
+    } catch (error) {
+        console.error("❌ Error al crear departamento:", error);
+        res.status(500).json({ message: 'Error al crear departamento' });
     }
 });
 

@@ -1,9 +1,10 @@
-const express = require('express');
+const express = require('express'); 
 const router = express.Router();
-const Enfermera = require('../models/Enfermera'); 
+const Enfermera = require('../models/Enfermera');
+const { verifyToken } = require('../middlewares/authMiddleware'); // ✅ Importar
 
-// ✅ Ruta para obtener enfermeras en formato tabla HTML
-router.get('/', async (req, res) => {
+// ✅ Ruta protegida para mostrar lista en tabla HTML
+router.get('/', verifyToken, async (req, res) => {
     try {
         const enfermeras = await Enfermera.findAll();
 
@@ -87,6 +88,8 @@ router.get('/', async (req, res) => {
             <div class="form-container">
                 <button onclick="location.href='/enfermeras/nueva'">Agregar Nueva Enfermera</button>
             </div>
+            </body>
+            </html>
         `;
 
         res.send(tablaHTML);
@@ -124,15 +127,29 @@ router.get('/nueva', (req, res) => {
     res.send(formularioHTML);
 });
 
-// ✅ Ruta para crear enfermera (POST)
+// ✅ Ruta para crear enfermera (POST - formulario)
 router.post('/crear', async (req, res) => {
     const { nombre, apellido, telefono, correo_electronico, usuario_id } = req.body;
     try {
         await Enfermera.create({ nombre, apellido, telefono, correo_electronico, usuario_id });
-        res.redirect('/enfermeras'); // Redirigir a la lista de enfermeras
+        res.redirect('/enfermeras');
     } catch (error) {
         console.error("❌ Error al crear enfermera:", error);
         res.status(500).send('Error al crear enfermera');
+    }
+});
+
+// ✅ Ruta protegida para crear enfermera (JSON API)
+router.post('/', verifyToken, async (req, res) => {
+    try {
+        const nueva = await Enfermera.create(req.body);
+        res.status(201).json({
+            message: "Enfermera registrada exitosamente",
+            enfermera: nueva
+        });
+    } catch (error) {
+        console.error("❌ Error al registrar enfermera:", error);
+        res.status(500).json({ message: 'Error registrando enfermera' });
     }
 });
 
@@ -141,7 +158,7 @@ router.get('/eliminar/:id', async (req, res) => {
     const { id } = req.params;
     try {
         await Enfermera.destroy({ where: { id_enfermera: id } });
-        res.redirect('/enfermeras'); // Redirigir a la lista de enfermeras
+        res.redirect('/enfermeras');
     } catch (error) {
         console.error("❌ Error al eliminar enfermera:", error);
         res.status(500).send('Error al eliminar enfermera');
@@ -193,7 +210,7 @@ router.post('/editar/:id', async (req, res) => {
     const { nombre, apellido, telefono, correo_electronico, usuario_id } = req.body;
     try {
         await Enfermera.update({ nombre, apellido, telefono, correo_electronico, usuario_id }, { where: { id_enfermera: id } });
-        res.redirect('/enfermeras'); // Redirigir a la lista de enfermeras
+        res.redirect('/enfermeras');
     } catch (error) {
         console.error("❌ Error al actualizar enfermera:", error);
         res.status(500).send('Error al actualizar enfermera');
