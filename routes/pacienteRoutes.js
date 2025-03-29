@@ -3,62 +3,33 @@ const router = express.Router();
 const Paciente = require('../models/Paciente');
 const { verifyToken } = require('../middlewares/authMiddleware');
 
-// ✅ Ruta para obtener pacientes (protegida con token)
+// ✅ Obtener todos los pacientes
 router.get('/', verifyToken, async (req, res) => {
     try {
         const pacientes = await Paciente.findAll();
-
-        let tablaHTML = `
-            <html>
-            <head>
-                <title>Lista de Pacientes</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-            </head>
-            <body class="bg-light">
-                <div class="container my-5">
-                    <h2 class="text-center mb-4">Lista de Pacientes</h2>
-                    <table class="table table-bordered table-hover table-striped">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Apellido</th>
-                                <th>Fecha Nacimiento</th>
-                                <th>Dirección</th>
-                                <th>Teléfono</th>
-                                <th>Correo Electrónico</th>
-                                <th>Historia Médica</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-
-        pacientes.forEach(paciente => {
-            tablaHTML += `
-                <tr>
-                    <td>${paciente.id_paciente}</td>
-                    <td>${paciente.nombre}</td>
-                    <td>${paciente.apellido}</td>
-                    <td>${paciente.fecha_nacimiento}</td>
-                    <td>${paciente.direccion}</td>
-                    <td>${paciente.telefono}</td>
-                    <td>${paciente.correo_electronico}</td>
-                    <td>${paciente.historia_medica}</td>
-                </tr>`;
-        });
-
-        tablaHTML += `</tbody></table>
-        </div>
-    </body>
-    </html>`;
-
-        res.send(tablaHTML);
+        res.json(pacientes);
     } catch (error) {
         console.error("❌ Error al obtener pacientes:", error);
-        res.status(500).send('Error obteniendo pacientes');
+        res.status(500).json({ message: 'Error obteniendo pacientes' });
     }
 });
 
-// ✅ Nueva ruta para agregar un paciente (protegida con token)
+// ✅ Obtener un paciente por ID
+router.get('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const paciente = await Paciente.findByPk(id);
+        if (!paciente) {
+            return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+        res.json(paciente);
+    } catch (error) {
+        console.error("❌ Error al obtener paciente:", error);
+        res.status(500).json({ message: 'Error obteniendo paciente' });
+    }
+});
+
+// ✅ Crear un nuevo paciente
 router.post('/', verifyToken, async (req, res) => {
     try {
         const nuevoPaciente = await Paciente.create(req.body);
@@ -66,6 +37,37 @@ router.post('/', verifyToken, async (req, res) => {
     } catch (error) {
         console.error("❌ Error al crear paciente:", error);
         res.status(500).json({ error: 'Error creando paciente' });
+    }
+});
+
+// ✅ Actualizar un paciente
+router.put('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [actualizado] = await Paciente.update(req.body, { where: { id_paciente: id } });
+        if (!actualizado) {
+            return res.status(404).json({ message: 'Paciente no encontrado para actualizar' });
+        }
+        const pacienteActualizado = await Paciente.findByPk(id);
+        res.json({ message: 'Paciente actualizado exitosamente', paciente: pacienteActualizado });
+    } catch (error) {
+        console.error("❌ Error al actualizar paciente:", error);
+        res.status(500).json({ message: 'Error actualizando paciente' });
+    }
+});
+
+// ✅ Eliminar un paciente
+router.delete('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const eliminado = await Paciente.destroy({ where: { id_paciente: id } });
+        if (!eliminado) {
+            return res.status(404).json({ message: 'Paciente no encontrado para eliminar' });
+        }
+        res.json({ message: 'Paciente eliminado exitosamente' });
+    } catch (error) {
+        console.error("❌ Error al eliminar paciente:", error);
+        res.status(500).json({ message: 'Error eliminando paciente' });
     }
 });
 
