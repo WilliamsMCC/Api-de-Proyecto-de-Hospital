@@ -43,7 +43,7 @@ app.post('/auth/login', (req, res) => {
     res.send(`
         <h3>✅ Login exitoso</h3>
         <p>Token guardado en cookie.</p>
-        <a href="/pacientes">Ir a pacientes</a>
+        < href="/pacientes">Ir a pacientes</
     `);
 });
 
@@ -83,14 +83,14 @@ app.get('/logout', (req, res) => {
 });
 
 // ✅ Rutas del sistema
-app.use('/pacientes', pacienteRoutes); 
-app.use('/doctores', doctorRoutes);
-app.use('/citas', citaRoutes); 
-app.use('/medicamentos', medicamentoRoutes);
-app.use('/tratamientos', tratamientoRoutes);
-app.use('/auth', usuarioRoutes); 
-app.use('/enfermeras', enfermeraRoutes);
-app.use('/departamentos', departamentoRoutes);
+//app.use('/pacientes', pacienteRoutes); 
+//app.use('/doctores', doctorRoutes);
+//app.use('/citas', citaRoutes); 
+//app.use('/medicamentos', medicamentoRoutes);
+//app.use('/tratamientos', tratamientoRoutes);
+//app.use('/auth', usuarioRoutes); 
+//app.use('/enfermeras', enfermeraRoutes);
+//app.use('/departamentos', departamentoRoutes);
 
 module.exports = app;
 
