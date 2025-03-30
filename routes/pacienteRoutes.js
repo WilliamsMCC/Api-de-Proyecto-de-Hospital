@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 const Paciente = require('../models/Paciente');
 const { verifyToken } = require('../middlewares/authMiddleware');
@@ -71,4 +71,24 @@ router.delete('/:id', verifyToken, async (req, res) => {
     }
 });
 
+module.exports = router;*/
+
+
+const express = require('express');
+const router = express.Router();
+const { obtenerPacientes, crearPaciente, actualizarPaciente, eliminarPaciente } = require('../controllers/pacienteControllers');
+
+// Ruta para obtener todos los pacientes
+router.get('/', obtenerPacientes);
+
+// Ruta para crear un nuevo paciente
+router.post('/', crearPaciente);
+
+// Ruta para actualizar un paciente por ID
+router.put('/:id', actualizarPaciente);
+
+// Ruta para eliminar un paciente por ID
+router.delete('/:id', eliminarPaciente);
+
 module.exports = router;
+

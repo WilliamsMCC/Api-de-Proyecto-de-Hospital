@@ -83,8 +83,8 @@ app.get('/logout', (req, res) => {
 });
 
 // ✅ Rutas del sistema
-//app.use('/pacientes', pacienteRoutes); 
-//app.use('/doctores', doctorRoutes);
+app.use('/pacientes', pacienteRoutes); 
+app.use('/doctores', doctorRoutes);
 //app.use('/citas', citaRoutes); 
 //app.use('/medicamentos', medicamentoRoutes);
 //app.use('/tratamientos', tratamientoRoutes);

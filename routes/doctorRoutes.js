@@ -1,6 +1,6 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
-const Doctor = require('../models/Doctor');
+const Doctor = require('../models/doctor');
 const { verifyToken } = require('../middlewares/authMiddleware');
 
 // ✅ Obtener lista de doctores (JSON protegido)
@@ -26,6 +26,19 @@ router.post('/', verifyToken, async (req, res) => {
         console.error('❌ Error al crear doctor:', error);
         res.status(500).json({ message: 'Error al crear doctor' });
     }
-});
+});*/
+
+const express = require('express');
+const router = express.Router();
+const { obtenerDoctors, crearDoctor, actualizarDoctor, eliminarDoctor } = require('../controllers/doctorControllers');
+
+
+router.get('/', obtenerDoctors);
+
+router.post('/', crearDoctor);
+
+router.put('/:id', actualizarDoctor);
+
+router.delete('/:id', eliminarDoctor);
 
 module.exports = router;
