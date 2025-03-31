@@ -11,6 +11,24 @@ async function obtenerPacientes(req, res) {
     }
 }
 
+// Obtener UN paciente por ID
+async function obtenerPacientePorId(req, res) {
+    const { id } = req.params;
+    try {
+        const paciente = await Paciente.findByPk(id); // findByPk is efficient for primary key lookup
+
+        if (!paciente) {
+            return res.status(404).json({ message: 'Paciente no encontrado' }); // Use .json
+        }
+
+        res.status(200).json(paciente); // Use .json
+    } catch (err) {
+        console.error(`Error al obtener paciente con ID ${id}:`, err); // Log specific error
+        res.status(500).json({ message: 'Error al obtener el paciente' }); // Use .json
+    }
+}
+
+
 // Crear
 async function crearPaciente(req, res) {
     try {
@@ -50,4 +68,4 @@ async function eliminarPaciente(req, res) {
     }
 }
 
-module.exports = { obtenerPacientes, crearPaciente, actualizarPaciente, eliminarPaciente };
+module.exports = { obtenerPacientes, obtenerPacientePorId, crearPaciente, actualizarPaciente, eliminarPaciente };

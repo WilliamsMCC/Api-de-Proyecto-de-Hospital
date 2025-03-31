@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const {
     obtenerPacientes,
+    obtenerPacientePorId,
     crearPaciente,
     actualizarPaciente,
     eliminarPaciente
@@ -56,6 +57,49 @@ router.use(verifyToken);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/', obtenerPacientes);
+
+
+
+// --- ADD THIS ROUTE AND SWAGGER DOC ---
+/**
+ * @swagger
+ * /pacientes/{id}:
+ *   get:
+ *     summary: Obtener un paciente por su ID
+ *     description: Retorna los detalles de un paciente específico basado en su ID numérico. Requiere autenticación.
+ *     tags: [Pacientes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/pacienteId' # Referencia al parámetro de ID definido en config/swagger.js
+ *     responses:
+ *       200:
+ *         description: Detalles del paciente obtenidos exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Paciente' # Retorna el objeto Paciente completo
+ *       401:
+ *         description: No autorizado. Token inválido, expirado o no proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Paciente no encontrado con el ID proporcionado.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor al intentar obtener el paciente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/:id', obtenerPacientePorId); // <-- Define the route
+// --- END OF ADDED ROUTE AND SWAGGER DOC ---
 
 /**
  * @swagger
