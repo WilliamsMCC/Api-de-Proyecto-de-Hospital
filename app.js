@@ -1,12 +1,24 @@
 const express = require('express');
-const cookieParser = require('cookie-parser'); // ✅ nuevo
-const { createToken, verifyToken } = require('./services/services'); 
+const cookieParser = require('cookie-parser'); // Keep for middleware if needed
+// Remove direct dependency on the old service if not used elsewhere
+// const { createToken, verifyToken } = require('./services/services');
+const cors = require('cors');
+const { verifyToken } = require('./middlewares/authMiddleware'); // Use the fixed middleware
+
+
+
+// --- Swagger Imports ---
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger'); 
+
+
+// Import all route handlers
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const citaRoutes = require('./routes/citaRoutes');
 const medicamentoRoutes = require('./routes/medicamentoRoutes');
 const tratamientoRoutes = require('./routes/tratamientoRoutes');
-const usuarioRoutes = require('./routes/usuarioRoutes');
+const usuarioRoutes = require('./routes/usuarioRoutes'); // The main auth routes
 const enfermeraRoutes = require('./routes/enfermeraRoutes');
 const departamentoRoutes = require('./routes/departamentoRoutes');
 
@@ -19,78 +31,85 @@ if (!process.env.SECRET_TOKEN) {
 
 const app = express();
 
+
+
+
+const corsOptions = {
+    // Replace 'http://localhost:xxxx' with the actual origin of your frontend app
+    // If your frontend runs on port 5173, use that.
+    origin: 'http://localhost:5173', // <--- IMPORTANT: SET YOUR FRONTEND ORIGIN HERE
+    optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+    credentials: true // Allows cookies/authorization headers to be sent from the frontend
+  };
+  app.use(cors(corsOptions)); // <--- Use configured CORS options
+  
+
+
 // ✅ Middleware necesarios
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser()); // ✅ usar cookie-parser
+app.use(express.json()); // For parsing application/json
+app.use(express.urlencoded({ extended: false })); // For parsing application/x-www-form-urlencoded
+app.use(cookieParser()); // Keep in case cookies are used by frontend/middleware
 
-// ✅ Redirigir raíz al login
+// --- REMOVE Unconventional/HTML Routes ---
+/*
+// ✅ Redirigir raíz al login (Remove or change - API root usually shows status/docs)
 app.get('/', (req, res) => {
-    res.redirect('/auth/login');
+    // res.redirect('/auth/login'); // Redirect doesn't make sense for API
+    res.json({ message: "Hospital API is running. Use /auth/login to authenticate." });
 });
 
-// ✅ Ruta de login visual que guarda el token en cookie
-app.post('/auth/login', (req, res) => {
-    const user = req.body.user || "test_user"; 
-    const token = createToken(user);
+// ✅ Ruta de login visual que guarda el token en cookie (REMOVE - Use /auth/login from usuarioRoutes)
+app.post('/auth/login', (req, res) => { ... });
 
-    // Guardar token en cookie
-    res.cookie('token', token, {
-        httpOnly: true,
-        maxAge: 3600000 // 1 hora
-    });
+// ✅ Ruta para verificar un token enviado en body (REMOVE - Middleware handles this)
+app.post('/verify', (req, res) => { ... });
 
-    res.send(`
-        <h3>✅ Login exitoso</h3>
-        <p>Token guardado en cookie.</p>
-        < href="/pacientes">Ir a pacientes</
-    `);
+// ✅ Ruta protegida para probar tokens desde cookie (REMOVE - Test protected endpoints directly)
+app.get('/datos-seguros', (req, res) => { ... });
+
+// ✅ Ruta para cerrar sesión (elimina la cookie) (REMOVE - Use /auth/logout if implemented, or client-side)
+app.get('/logout', (req, res) => { ... });
+*/
+
+
+// --- Swagger UI Route ---
+// Serve Swagger UI documentation at /api-docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+
+// --- Route to serve the raw Swagger/OpenAPI spec ---
+// Add this endpoint:
+app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
 });
 
-// ✅ Ruta para verificar un token enviado en body (opcional)
-app.post('/verify', (req, res) => {
-    const token = req.body.token || req.cookies.token;
+// --- ACTIVATE API Routes ---
+// Authentication routes (Login) - Public (verifyToken is not applied here)
+app.use('/auth', usuarioRoutes);
 
-    if (!token) {
-        return res.status(400).json({ error: "Token no proporcionado" });
-    }
+// Protected API Routes - Apply verifyToken middleware here or within each route file
+// Applying here is simpler for a blanket protection, but less flexible.
+// Let's apply it within the route files for better control (see step 6).
+app.use('/pacientes', pacienteRoutes); // Will add verifyToken inside this file
+app.use('/doctores', doctorRoutes);   // Will add verifyToken inside this file
+app.use('/citas', citaRoutes);         // Already uses verifyToken inside
+app.use('/medicamentos', medicamentoRoutes); // Already uses verifyToken inside
+app.use('/tratamientos', tratamientoRoutes); // Already uses verifyToken inside
+app.use('/enfermeras', enfermeraRoutes);   // Already uses verifyToken inside
+app.use('/departamentos', departamentoRoutes); // Already uses verifyToken inside
 
-    const result = verifyToken(token);
-    res.json(result);
+
+// Basic Root Route for API status
+app.get('/', (req, res) => {
+    res.json({ message: "Hospital API is running. Authenticate via /auth/login." });
 });
 
-// ✅ Ruta protegida para probar tokens desde cookie
-app.get('/datos-seguros', (req, res) => {
-    const token = req.cookies.token;
-
-    if (!token) {
-        return res.status(401).json({ error: "Acceso denegado. No hay token." });
-    }
-
-    const decoded = verifyToken(token);
-
-    if (decoded.error) {
-        return res.status(401).json({ error: decoded.error });
-    }
-
-    res.json({ mensaje: "Acceso permitido", usuario: decoded.sub });
+// Optional: Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("Unhandled Error:", err);
+  res.status(500).json({ message: "Internal Server Error" });
 });
 
-// ✅ Ruta para cerrar sesión (elimina la cookie)
-app.get('/logout', (req, res) => {
-    res.clearCookie('token');
-    res.send(`<h3>🔒 Sesión cerrada.</h3><a href="/auth/login">Volver al login</a>`);
-});
-
-// ✅ Rutas del sistema
-app.use('/pacientes', pacienteRoutes); 
-app.use('/doctores', doctorRoutes);
-//app.use('/citas', citaRoutes); 
-//app.use('/medicamentos', medicamentoRoutes);
-//app.use('/tratamientos', tratamientoRoutes);
-//app.use('/auth', usuarioRoutes); 
-//app.use('/enfermeras', enfermeraRoutes);
-//app.use('/departamentos', departamentoRoutes);
 
 module.exports = app;
-
