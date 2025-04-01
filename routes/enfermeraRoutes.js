@@ -9,7 +9,7 @@ router.get('/', verifyToken, async (req, res) => {
         const enfermeras = await Enfermera.findAll();
         res.json(enfermeras);
     } catch (error) {
-        console.error("❌ Error al obtener enfermeras:", error);
+        console.error("Error al obtener enfermeras:", error);
         res.status(500).json({ message: 'Error obteniendo enfermeras' });
     }
 });
@@ -23,7 +23,7 @@ router.post('/', verifyToken, async (req, res) => {
             enfermera: nueva
         });
     } catch (error) {
-        console.error("❌ Error al registrar enfermera:", error);
+        console.error("Error al registrar enfermera:", error);
         res.status(500).json({ message: 'Error registrando enfermera' });
     }
 });
@@ -38,7 +38,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
         }
         res.json({ message: 'Enfermera eliminada exitosamente' });
     } catch (error) {
-        console.error("❌ Error al eliminar enfermera:", error);
+        console.error("Error al eliminar enfermera:", error);
         res.status(500).json({ message: 'Error al eliminar enfermera' });
     }
 });
@@ -63,7 +63,7 @@ router.put('/:id', verifyToken, async (req, res) => {
             enfermera: enfermeraActualizada
         });
     } catch (error) {
-        console.error("❌ Error al actualizar enfermera:", error);
+        console.error("Error al actualizar enfermera:", error);
         res.status(500).json({ message: 'Error al actualizar enfermera' });
     }
 });
