@@ -3,6 +3,15 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const { createToken, validatePassword } = require('../services/service');
+const usuarioController = require('../controllers/usuarioController');
+
+
+// CRUD completo usuario
+router.post('/', usuarioController.create);
+router.get('/', usuarioController.getAll);
+router.get('/:id', usuarioController.getById);
+router.put('/:id', usuarioController.update);
+router.delete('/:id', usuarioController.delete);
 
 // ✅ Ruta para procesar login (solo JSON)
 router.post('/login', async (req, res) => {
