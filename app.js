@@ -26,6 +26,8 @@ app.use(cookieParser()); // ✅ usar cookie-parser
 
 //ruta
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/tratamientos', tratamientoRoutes);
+app.use('/api/medicamentos', medicamentoRoutes);
 
 // ✅ Redirigir raíz al login
 app.get('/', (req, res) => {
