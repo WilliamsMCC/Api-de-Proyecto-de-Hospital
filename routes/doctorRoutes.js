@@ -1,17 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { obtenerDoctors, crearDoctor, actualizarDoctor, eliminarDoctor } = require('../controllers/doctorControllers');
-const { verifyToken } = require('../middlewares/authMiddleware'); // Import middleware
+const {
+    obtenerDoctors,
+    obtenerDoctorPorId, 
+    crearDoctor,
+    actualizarDoctor,
+    eliminarDoctor
+} = require('../controllers/doctorControllers');
 
-// Apply verifyToken to all routes in this file
-router.use(verifyToken); // Apply to all subsequent routes in this router
+const { verifyToken } = require('../middlewares/authMiddleware');
+
+
+router.use(verifyToken);
+
 
 router.get('/', obtenerDoctors);
-
+router.get('/:id', obtenerDoctorPorId); 
 router.post('/', crearDoctor);
-
 router.put('/:id', actualizarDoctor);
-
 router.delete('/:id', eliminarDoctor);
+
 
 module.exports = router;
