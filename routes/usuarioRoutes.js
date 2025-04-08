@@ -4,14 +4,15 @@ const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const { createToken, validatePassword } = require('../services/service');
 const usuarioController = require('../controllers/usuarioController');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
 
 // CRUD completo usuario
-router.post('/', usuarioController.create);
-router.get('/', usuarioController.getAll);
-router.get('/:id', usuarioController.getById);
-router.put('/:id', usuarioController.update);
-router.delete('/:id', usuarioController.delete);
+router.post('/', verifyToken, usuarioController.create);          
+router.get('/', verifyToken, usuarioController.getAll);           
+router.get('/:id', verifyToken, usuarioController.getById);     
+router.put('/:id', verifyToken, usuarioController.update);        
+router.delete('/:id', verifyToken, usuarioController.delete);      
 
 // ✅ Ruta para procesar login (solo JSON)
 router.post('/login', async (req, res) => {
@@ -39,7 +40,7 @@ router.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: usuario.id, rol: usuario.rol, email: usuario.email },
+            { id: usuario.id, rol: usuario.rol, email: usuario.email, nombre: usuario.nombre },
             process.env.SECRET_TOKEN,
             { expiresIn: '1h' }
         );
@@ -47,7 +48,7 @@ router.post('/login', async (req, res) => {
         res.json({
             message: '✅ Login exitoso',
             token,
-            usuario: { id: usuario.id, rol: usuario.rol, email: usuario.email }
+            usuario: { id: usuario.id, rol: usuario.rol, email: usuario.email, nombre: usuario.nombre }
         });
 
     } catch (err) {
