@@ -1,6 +1,7 @@
 const express = require('express');
-const cookieParser = require('cookie-parser'); // ✅ nuevo
-const { createToken, verifyToken } = require('./services/services'); 
+const cookieParser = require('cookie-parser');
+const { createToken, verifyToken } = require('./services/services');
+
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const citaRoutes = require('./routes/citaRoutes');
@@ -19,40 +20,41 @@ if (!process.env.SECRET_TOKEN) {
 
 const app = express();
 
-// ✅ Middleware necesarios
+// ✅ Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser()); // ✅ usar cookie-parser
+app.use(cookieParser());
 
-//ruta
+// ✅ Rutas principales
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/tratamientos', tratamientoRoutes);
 app.use('/api/medicamentos', medicamentoRoutes);
 
-// ✅ Redirigir raíz al login
+// ✅ Redirigir raíz al login visual (HTML)
 app.get('/', (req, res) => {
     res.redirect('/auth/login');
 });
 
-// ✅ Ruta de login visual que guarda el token en cookie
+// ✅ Ruta visual de login con cookie
 app.post('/auth/login', (req, res) => {
     const user = req.body.user || "test_user"; 
     const token = createToken(user);
 
-    // Guardar token en cookie
     res.cookie('token', token, {
         httpOnly: true,
-        maxAge: 3600000 // 1 hora
+        maxAge: 3600000
     });
 
     res.send(`
-        <h3>✅ Login exitoso</h3>
-        <p>Token guardado en cookie.</p>
-        < href="/pacientes">Ir a pacientes</
+        <div>
+            <h3>✅ Login exitoso</h3>
+            <p>Token guardado en cookie.</p>
+            <a href="/datos-seguros">Ir a datos seguros</a>
+        </div>
     `);
 });
 
-// ✅ Ruta para verificar un token enviado en body (opcional)
+// ✅ Verificar token desde cookie o body
 app.post('/verify', (req, res) => {
     const token = req.body.token || req.cookies.token;
 
@@ -64,7 +66,7 @@ app.post('/verify', (req, res) => {
     res.json(result);
 });
 
-// ✅ Ruta protegida para probar tokens desde cookie
+// ✅ Ruta protegida
 app.get('/datos-seguros', (req, res) => {
     const token = req.cookies.token;
 
@@ -81,21 +83,22 @@ app.get('/datos-seguros', (req, res) => {
     res.json({ mensaje: "Acceso permitido", usuario: decoded.sub });
 });
 
-// ✅ Ruta para cerrar sesión (elimina la cookie)
+// ✅ Cerrar sesión
 app.get('/logout', (req, res) => {
     res.clearCookie('token');
-    res.send(`<h3>🔒 Sesión cerrada.</h3><a href="/auth/login">Volver al login</a>`);
+    res.send(`
+        <div>
+            <h3>🔒 Sesión cerrada.</h3>
+            <a href="/auth/login">Volver al login</a>
+        </div>
+    `);
 });
 
-// ✅ Rutas del sistema
+// ✅ Rutas adicionales
 app.use('/pacientes', pacienteRoutes); 
 app.use('/doctores', doctorRoutes);
-//app.use('/citas', citaRoutes); 
-//app.use('/medicamentos', medicamentoRoutes);
-//app.use('/tratamientos', tratamientoRoutes);
-//app.use('/auth', usuarioRoutes); 
-//app.use('/enfermeras', enfermeraRoutes);
-//app.use('/departamentos', departamentoRoutes);
+// app.use('/citas', citaRoutes); 
+// app.use('/enfermeras', enfermeraRoutes);
+// app.use('/departamentos', departamentoRoutes);
 
 module.exports = app;
-
