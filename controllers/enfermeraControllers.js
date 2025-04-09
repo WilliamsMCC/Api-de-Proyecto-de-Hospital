@@ -4,24 +4,51 @@ const Enfermera = require('../models/Enfermera');
 async function obtenerEnfermeras(req, res) {
     try {
         const enfermeras = await Enfermera.findAll({
+            // Keep specific attributes if desired, or remove 'attributes' for all fields
             attributes: ['id_enfermera', 'nombre', 'apellido', 'telefono', 'correo_electronico', 'usuario_id']
         });
         res.status(200).json(enfermeras);
     } catch (err) {
         console.error("Error al obtener enfermeras:", err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Error al obtener las enfermeras',
-            error: err.message 
+            error: err.message
         });
     }
 }
 
+
+// Obtener una enfermera por ID
+async function obtenerEnfermeraPorId(req, res) {
+    const { id } = req.params;
+    try {
+        const enfermera = await Enfermera.findByPk(id, {
+            // Optional: Specify attributes if needed
+             attributes: ['id_enfermera', 'nombre', 'apellido', 'telefono', 'correo_electronico', 'usuario_id']
+        });
+
+        if (!enfermera) {
+            return res.status(404).json({ message: 'Enfermera no encontrada' });
+        }
+        res.status(200).json(enfermera);
+    } catch (err) {
+        console.error(`Error al obtener enfermera con ID ${id}:`, err);
+        res.status(500).json({
+            message: 'Error al obtener la enfermera',
+            error: err.message
+        });
+    }
+}
+
+
+
 // Crear nueva enfermera
 async function crearEnfermera(req, res) {
     const { nombre, apellido, telefono, correo_electronico, usuario_id } = req.body;
+    // Keep validation
     if (!nombre || !apellido || !telefono || !correo_electronico || !usuario_id) {
-        return res.status(400).json({ 
-            message: 'Todos los campos son requeridos: nombre, apellido, telefono, correo_electronico, usuario_id' 
+        return res.status(400).json({
+            message: 'Todos los campos son requeridos: nombre, apellido, telefono, correo_electronico, usuario_id'
         });
     }
     try {
@@ -32,21 +59,27 @@ async function crearEnfermera(req, res) {
             correo_electronico,
             usuario_id
         });
-        
-        res.status(201).json({
-            message: "Enfermera registrada exitosamente",
-            data: enfermera
-        });
+
+        // Standardize response slightly - just return the created object
+        res.status(201).json(enfermera);
+        // Original response:
+        // res.status(201).json({
+        //     message: "Enfermera registrada exitosamente",
+        //     data: enfermera
+        // });
     } catch (err) {
         console.error("Error al registrar enfermera:", err);
         if (err.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ 
-                message: 'El correo electrónico ya está registrado' 
+            return res.status(409).json({
+                message: 'El correo electrónico ya está registrado'
             });
-        } 
-        res.status(500).json({ 
+        }
+         if (err.name === 'SequelizeValidationError') {
+            return res.status(400).json({ message: 'Error de validación', errors: err.errors.map(e => e.message) });
+        }
+        res.status(500).json({
             message: 'Error al crear la enfermera',
-            error: err.message 
+            error: err.message
         });
     }
 }
@@ -54,36 +87,39 @@ async function crearEnfermera(req, res) {
 // Actualizar enfermera por ID
 async function actualizarEnfermera(req, res) {
     const { id } = req.params;
-    const { nombre, apellido, telefono, correo_electronico, usuario_id } = req.body;
+    // Destructure body inside try block after checking existence
     try {
-        // Verificar si existe la enfermera
         const enfermeraExistente = await Enfermera.findByPk(id);
         if (!enfermeraExistente) {
             return res.status(404).json({ message: 'Enfermera no encontrada' });
         }
 
-        const [updated] = await Enfermera.update(
-            { nombre, apellido, telefono, correo_electronico, usuario_id },
-            { where: { id_enfermera: id } }
-        );
+        // Update using req.body directly
+        await Enfermera.update(req.body, {
+            where: { id_enfermera: id }
+        });
 
         const enfermeraActualizada = await Enfermera.findByPk(id);
-        res.status(200).json({
-            message: 'Enfermera actualizada exitosamente',
-            data: enfermeraActualizada
-        });
+        // Standardize response slightly
+        res.status(200).json(enfermeraActualizada);
+        // Original response:
+        // res.status(200).json({
+        //     message: 'Enfermera actualizada exitosamente',
+        //     data: enfermeraActualizada
+        // });
     } catch (err) {
-        console.error("Error al actualizar enfermera:", err);
-        
+        console.error(`Error al actualizar enfermera con ID ${id}:`, err);
         if (err.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ 
-                message: 'El correo electrónico ya está registrado' 
+            return res.status(409).json({
+                message: 'El correo electrónico ya está registrado por otra enfermera' // More specific message
             });
         }
-        
-        res.status(500).json({ 
+         if (err.name === 'SequelizeValidationError') {
+            return res.status(400).json({ message: 'Error de validación', errors: err.errors.map(e => e.message) });
+        }
+        res.status(500).json({
             message: 'Error al actualizar la enfermera',
-            error: err.message 
+            error: err.message
         });
     }
 }
@@ -91,31 +127,34 @@ async function actualizarEnfermera(req, res) {
 // Eliminar por ID
 async function eliminarEnfermera(req, res) {
     const { id } = req.params;
-
     try {
-        // Verificar si existe
-        const enfermera = await Enfermera.findByPk(id);
+        const enfermera = await Enfermera.findByPk(id); // Check existence first
         if (!enfermera) {
             return res.status(404).json({ message: 'Enfermera no encontrada' });
         }
 
         await Enfermera.destroy({ where: { id_enfermera: id } });
-        res.status(200).json({ 
-            message: 'Enfermera eliminada exitosamente',
-            data: enfermera 
-        });
+        // Standardize response
+        res.status(200).json({ message: 'Enfermera eliminada exitosamente' });
+        // Original response:
+        // res.status(200).json({
+        //     message: 'Enfermera eliminada exitosamente',
+        //     data: enfermera // Returning deleted data is optional
+        // });
     } catch (err) {
-        console.error("Error al eliminar enfermera:", err);
-        res.status(500).json({ 
+        console.error(`Error al eliminar enfermera con ID ${id}:`, err);
+        res.status(500).json({
             message: 'Error al eliminar la enfermera',
-            error: err.message 
+            error: err.message
         });
     }
 }
 
-module.exports = { 
-    obtenerEnfermeras, 
-    crearEnfermera, 
-    actualizarEnfermera, 
-    eliminarEnfermera 
+
+module.exports = {
+    obtenerEnfermeras,
+    obtenerEnfermeraPorId, 
+    crearEnfermera,
+    actualizarEnfermera,
+    eliminarEnfermera
 };

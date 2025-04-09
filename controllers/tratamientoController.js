@@ -1,133 +1,112 @@
-const { sequelizeInstance } = require('../config/db');
 const Tratamiento = require('../models/Tratamiento');
+const Paciente = require('../models/Paciente');
+const Doctor = require('../models/Doctor');
 
 // Obtener todos los tratamientos
 exports.getAllTratamientos = async (req, res) => {
     try {
-        const tratamientos = await Tratamiento.findAll();
-        res.json({
-            success: true,
-            data: tratamientos
+        const tratamientos = await Tratamiento.findAll({
+            include: [ // Include associated data using aliases
+                { model: Paciente, as: 'paciente', attributes: ['id_paciente', 'nombre', 'apellido'] },
+                { model: Doctor, as: 'doctor', attributes: ['id_doctor', 'nombre', 'apellido', 'especialidad'] }
+            ],
+            order: [['fecha_inicio', 'DESC']] // Optional ordering
         });
+        res.status(200).json(tratamientos);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener tratamientos',
-            error: error.message
-        });
+        console.error("Error al obtener tratamientos:", error);
+        res.status(500).json({ message: 'Error al obtener tratamientos', error: error.message });
     }
 };
 
 // obtener por ID
 exports.getTratamientoById = async (req, res) => {
+    const { id } = req.params;
     try {
-        const tratamiento = await Tratamiento.findByPk(req.params.id);
-        
+        const tratamiento = await Tratamiento.findByPk(id, {
+            include: [ // Include associated data using aliases
+                { model: Paciente, as: 'paciente', attributes: ['id_paciente', 'nombre', 'apellido'] },
+                { model: Doctor, as: 'doctor', attributes: ['id_doctor', 'nombre', 'apellido', 'especialidad'] }
+            ]
+        });
         if (!tratamiento) {
-            return res.status(404).json({
-                success: false,
-                message: 'Tratamiento no encontrado'
-            });
+            return res.status(404).json({ message: 'Tratamiento no encontrado' });
         }
-        
-        res.json({
-            success: true,
-            data: tratamiento
-        });
+        res.status(200).json(tratamiento);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener el tratamiento',
-            error: error.message
-        });
+        console.error(`Error al obtener tratamiento con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error al obtener el tratamiento', error: error.message });
     }
 };
 
 // Crear
 exports.createTratamiento = async (req, res) => {
+    const { id_paciente, id_doctor, descripcion, fecha_inicio, fecha_fin } = req.body;
     try {
-        const { id_paciente, id_doctor, descripcion, fecha_inicio, fecha_fin } = req.body;
-        
-        //validacion por posible problemas
+        // Basic validation
         if (!id_paciente || !id_doctor || !descripcion || !fecha_inicio || !fecha_fin) {
-            return res.status(400).json({
-                success: false,
-                message: 'Todos los campos son requeridos'
-            });
+            return res.status(400).json({ message: 'Todos los campos son requeridos: id_paciente, id_doctor, descripcion, fecha_inicio, fecha_fin' });
         }
-
-        const nuevoTratamiento = await Tratamiento.create({
-            id_paciente,
-            id_doctor,
-            descripcion,
-            fecha_inicio,
-            fecha_fin
+        const nuevoTratamiento = await Tratamiento.create({ id_paciente, id_doctor, descripcion, fecha_inicio, fecha_fin });
+        // Re-fetch with includes to return consistent data, or just return the basic object
+        const tratamientoCreado = await Tratamiento.findByPk(nuevoTratamiento.id_tratamiento, {
+             include: [
+                { model: Paciente, as: 'paciente', attributes: ['id_paciente', 'nombre', 'apellido'] },
+                { model: Doctor, as: 'doctor', attributes: ['id_doctor', 'nombre', 'apellido', 'especialidad'] }
+            ]
         });
-        
-        res.status(201).json({
-            success: true,
-            data: nuevoTratamiento
-        });
+        res.status(201).json(tratamientoCreado || nuevoTratamiento); // Fallback if refetch fails
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al crear tratamiento',
-            error: error.message
-        });
+        console.error("Error al crear tratamiento:", error);
+        if (err.name === 'SequelizeValidationError') {
+            return res.status(400).json({ message: 'Error de validación', errors: err.errors.map(e => e.message) });
+        }
+        if (err.name === 'SequelizeForeignKeyConstraintError') {
+             return res.status(400).json({ message: 'ID de Paciente o Doctor inválido.' });
+        }
+        res.status(500).json({ message: 'Error al crear tratamiento', error: error.message });
     }
 };
 
-// Actualizar 
+// Actualizar
 exports.updateTratamiento = async (req, res) => {
+    const { id } = req.params;
     try {
-        const [updated] = await Tratamiento.update(req.body, {
-            where: { id_tratamiento: req.params.id }
-        });
-        
-        if (!updated) {
-            return res.status(404).json({
-                success: false,
-                message: 'Tratamiento no encontrado'
-            });
+        const tratamiento = await Tratamiento.findByPk(id);
+        if (!tratamiento) {
+            return res.status(404).json({ message: 'Tratamiento no encontrado' });
         }
-        
-        const tratamientoActualizado = await Tratamiento.findByPk(req.params.id);
-        res.json({
-            success: true,
-            data: tratamientoActualizado
+        await Tratamiento.update(req.body, { where: { id_tratamiento: id } });
+        const tratamientoActualizado = await Tratamiento.findByPk(id, { // Refetch updated data with includes
+             include: [
+                 { model: Paciente, as: 'paciente', attributes: ['id_paciente', 'nombre', 'apellido'] },
+                 { model: Doctor, as: 'doctor', attributes: ['id_doctor', 'nombre', 'apellido', 'especialidad'] }
+             ]
         });
+        res.status(200).json(tratamientoActualizado);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al actualizar tratamiento',
-            error: error.message
-        });
+        console.error(`Error al actualizar tratamiento con ID ${id}:`, error);
+        if (err.name === 'SequelizeValidationError') {
+            return res.status(400).json({ message: 'Error de validación', errors: err.errors.map(e => e.message) });
+        }
+        if (err.name === 'SequelizeForeignKeyConstraintError') {
+             return res.status(400).json({ message: 'ID de Paciente o Doctor inválido.' });
+        }
+        res.status(500).json({ message: 'Error al actualizar tratamiento', error: error.message });
     }
 };
 
-// Eliminar 
+// Eliminar
 exports.deleteTratamiento = async (req, res) => {
+    const { id } = req.params;
     try {
-        const deleted = await Tratamiento.destroy({
-            where: { id_tratamiento: req.params.id }
-        });
-        
+        const deleted = await Tratamiento.destroy({ where: { id_tratamiento: id } });
         if (!deleted) {
-            return res.status(404).json({
-                success: false,
-                message: 'Tratamiento no encontrado'
-            });
+            return res.status(404).json({ message: 'Tratamiento no encontrado' });
         }
-        
-        res.json({
-            success: true,
-            message: 'Tratamiento eliminado correctamente'
-        });
+        res.status(200).json({ message: 'Tratamiento eliminado correctamente' });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error al eliminar tratamiento',
-            error: error.message
-        });
+        console.error(`Error al eliminar tratamiento con ID ${id}:`, error);
+        res.status(500).json({ message: 'Error al eliminar tratamiento', error: error.message });
     }
 };
