@@ -62,6 +62,15 @@ Editar
 Authorization: Bearer <token>
 ![image](https://github.com/user-attachments/assets/cf7a9434-ebe6-42b4-883a-cbbcad8df822)
 
+PUT ACTUALIZADO 
+
+![image](https://github.com/user-attachments/assets/75d19860-f8c2-4c0c-a46e-741602e4cd6b)
+
+DELETE
+
+![image](https://github.com/user-attachments/assets/6cac5360-7b80-4225-9b43-968451b4131a)
+
+
 Error	Causa	Solución
 
 Token no proporcionado	No agregaste el header Authorization	Agregalo en Postman
