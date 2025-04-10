@@ -3,7 +3,7 @@ les explicaremos rapido el funcionamiento y su contenidoa y la estuctura
 es uan api creada para un hospita donde el funcionamiento es tratatar alos pacientos tener un mejor contro de entrada de paciento citas y doctores enferemos que atienden 
 esto ayudara a failitar y mejorar la eficacia de atencion 
 
-diaglama de la base de datos
+diagrama de la base de datos
 ![image](https://github.com/user-attachments/assets/c5428bc9-153a-4d9b-ab91-ae655555a969)
 
 Estructura general del proyecto
