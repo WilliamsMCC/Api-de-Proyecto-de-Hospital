@@ -1,8 +1,12 @@
-bien benidos a nuestra api Hospital 
-les explicaremos rapido el funcionamiento y su contenidoa y la estuctura
-es uan api creada para un hospita donde el funcionamiento es tratatar alos pacientos tener un mejor contro de entrada de paciento citas y doctores enferemos que atienden 
-esto ayudara a failitar y mejorar la eficacia de atencion 
-
+Hola a todos, sean bienvenidos.
+Hoy les vamos a explicar de forma rápida y sencilla el funcionamiento, el contenido y la estructura de nuestra API.
+Esta es una API desarrollada especialmente para la gestión de un hospital. Su propósito principal es facilitar el control y seguimiento de los pacientes, citas médicas, doctores y personal de enfermería.
+Con esta herramienta, buscamos:
+Llevar un mejor control de los ingresos de pacientes.
+Asignar citas de forma organizada.
+Tener registro claro de qué doctores y enfermeros atienden a cada paciente.
+Mejorar la eficiencia del servicio hospitalario.
+En resumen, esta API está pensada para optimizar la atención médica y agilizar la administración del hospital.
 diagrama de la base de datos
 ![image](https://github.com/user-attachments/assets/c5428bc9-153a-4d9b-ab91-ae655555a969)
 
