@@ -74,7 +74,7 @@ DELETE
 Error	Causa	Solución
 
 Token no proporcionado	No agregaste el header Authorization	Agregalo en Postman
-Cannot POST /api/usuarios/login	Ruta mal configurada	Revisá app.use()
+Cannot POST /usuarios/login	Ruta mal configurada	Revisá app.use()
 Token inválido	El token está vencido o mal copiado	Hacé login otra vez
 
 
