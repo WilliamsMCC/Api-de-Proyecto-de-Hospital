@@ -16,11 +16,14 @@ Estructura general del proyecto
 /routes: define las rutas de cada módulo
 /middlewares: contiene el verifyToken.js
 /models: contiene los modelos Sequelize
-app.js o index.js: configura y monta las rutas
+app.js o index.js: configura y mostrar las rutas
+![image](https://github.com/user-attachments/assets/9ce3cdd9-ab2f-4330-b1c7-43cf26854037)
 
 ¿Cómo funciona la autenticación con token y como general el token?
-
+ general el token
 $response = Invoke-WebRequest -Uri http://localhost:3000/usuarios/login -Method POST -Headers @{ "Content-Type" = "application/json" } -Body '{"email": "jperez@hospital.com", "password": "1234", "rol": "doctor"}' -ContentType "application/json"; $token = ($response.Content | ConvertFrom-Json).token; $token
+
+![image](https://github.com/user-attachments/assets/c2303937-a21f-40ba-8faa-f0562663f0a4)
 
 Se hace una petición POST a /usuarios/login
 Se envían email y password
@@ -57,6 +60,7 @@ makefile
 Copiar
 Editar
 Authorization: Bearer <token>
+![image](https://github.com/user-attachments/assets/cf7a9434-ebe6-42b4-883a-cbbcad8df822)
 
 Error	Causa	Solución
 
